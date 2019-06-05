@@ -2,9 +2,32 @@
   "name": "react-sf-symbols",
   "version": "0.1.0",
   "description": "A react component library for rendering Apple SDF Symbols on the web",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "storybook": "start-storybook -c storybook",
+    "generate": "node ./scripts/generate.js"
+  },
+  "peerDependencies": {
+    "react": "16.x"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.2.0",
+    "@babel/plugin-proposal-class-properties": "^7.4.4",
+    "@babel/preset-env": "^7.4.5",
+    "@storybook/react": "^5.1.1",
+    "@types/react": "^16.8.19",
+    "babel-loader": "^8.0.6",
+    "fs-extra": "^8.0.1",
+    "libxmljs": "^0.19.5",
+    "np": "^5.0.2",
+    "prettier": "^1.14.3",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "storybook": "^1.0.0",
+    "svgo": "^1.0.5",
+    "typescript": "^3.5.1",
+    "yargs": "^12.0.2"
   },
   "keywords": [
     "apple",

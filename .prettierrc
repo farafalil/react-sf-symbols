@@ -1,0 +1,8 @@
+{
+    "printWidth": 80,
+    "parser": "flow",
+    "requirePragma": true,
+    "singleQuote": true,
+    "tabWidth": 2,
+    "useTabs": false
+}
