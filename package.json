@@ -1,0 +1,17 @@
+{
+  "name": "react-sf-symbols",
+  "version": "0.1.0",
+  "description": "A react component library for rendering Apple SDF Symbols on the web",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "apple",
+    "sf",
+    "symbols",
+    "icons"
+  ],
+  "author": "Arron Hunt <arronjhunt@gmail.com>",
+  "license": "ISC"
+}
