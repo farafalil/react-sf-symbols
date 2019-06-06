@@ -2,8 +2,6 @@ const fs = require('fs-extra');
 const path = require('path');
 const xml = require('libxmljs');
 
-console.log('Hello world');
-
 const ICON_KEYS = [
     'Ultralight-S',
     'Thin-S',
@@ -33,25 +31,39 @@ const ICON_KEYS = [
     'Heavy-L',
     'Black-L',
 ];
-const TEMPLATE_SOURCE = path.join(process.cwd(), 'src/svg/templates');
+const TEMPLATE_SOURCE = path.join(process.cwd(), 'src/svg/templates-test');
 const DESTINATION = path.join(process.cwd(), 'src/svg/dist');
 
-function readTemplate(source, callback) {
-    fs.readFile(source, 'utf8', (err, data) => {
-        if (err) throw err;
+/**
+ * Read a template from a system path
+ * @param {*} source - source path
+ * @returns {Object} libxmljs template object
+ */
+async function readTemplate(source) {
+    return fs.readFile(source, 'utf8').then(data => {
         const template = parseTemplate(data);
-        callback(template);
-    });
+        return template;
+    }).catch(error => { throw error });
 }
 
+/**
+ * Parse the SF Symbols template for necessary components
+ * @param {*} template 
+ * @returns {Object} Symbol object
+ */
 function parseTemplate(template) {
     const document = xml.parseXmlString(template, { noblanks: true });
 
     let symbols;
+    let guides;
     for(const node of document.childNodes()) {
         if (node.find('./@id="Symbols"')) symbols = node;
+        if (node.find('./@id="Guides"')) guides = node;
     }
 
+    /**
+     * Returns a symbol object with the name as the key and the svg code as the value
+     */
     const symbol_object = symbols.childNodes().reduce((object, symbol) => {
         const id = symbol.attr('id').value();
         return Object.assign({
@@ -60,9 +72,30 @@ function parseTemplate(template) {
         })
     });
 
-    return symbol_object;
+    /**
+     * Parse the margins for each symbol
+     */
+    let margins = {};
+    guides.childNodes().forEach((guide) => {
+        const id = guide.attr('id').value();
+        if (id === 'left-margin') {
+            margins.left = guide.attr('width').value();
+        }
+        if (id === 'right-margin') {
+            margins.right = guide.attr('width').value();
+        }
+    })
+
+    return {
+        symbols: symbol_object,
+        margins
+    };
 }
 
+/**
+ * TODO: Fix the dimensions by reading from the margins inside the template
+ * @param {string} template - libxmljs xml string
+ */
 function templateToSvgCode(template) {
     return `<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="3300" height="2200">${template}</svg>`;
 }
@@ -82,22 +115,12 @@ async function writeToFile(filename, contents) {
     })
 }
 
-async function readTemplatesDirectory(dir, callback) {
-    // return await fs.readdir(dir, (err, files) => {
-    //     if (err) throw(err);
-
-    //     const template_files = files.map(file => {
-    //         const parsed = path.parse(file);
-    //         if (parsed.ext === '.svg') {
-    //             return ({
-    //                 name: parsed.name,
-    //                 path: `${dir}/${file}`
-    //             });
-    //         }
-    //     });
-
-    //     callback(template_files);
-    // });
+/**
+ * Reads the template directory and returns a template directory object
+ * @param {*} dir - Directory containing templates
+ * @returns {Object} - { name: string, path: string }
+ */
+async function readTemplatesDirectory(dir) {
     const contents = await fs.readdir(dir);
     return contents.map(file => {
         const parsed = path.parse(file);
@@ -110,24 +133,21 @@ async function readTemplatesDirectory(dir, callback) {
     }).filter(f => f !== undefined);
 }
 
-async function load() {
-    console.log('Reading template...');
-
+/**
+ * Generates the individual svg files into the destination directory
+ */
+async function generate() {
     let template_files = await readTemplatesDirectory(TEMPLATE_SOURCE);
-    console.log(template_files);
 
-    // readTemplatesDirectory(TEMPLATE_SOURCE, (files) => {
-        // Object.keys(files).forEach(key => {
-        //     if (files[key]) {
-        //         const icon_name = files[key].name;
-        //         readTemplate(files[key].path, template => {
-        //             Object.keys(template).forEach(key => {
-        //                 writeToFile(`${DESTINATION}/${icon_name}/${key}.svg`, templateToSvgCode(template[key]));
-        //             });
-        //         });
-        //     }
-        // })
-    // });    
+    for (const file of template_files) {
+        console.log(`Generating ${file.name}`);
+        let template = await readTemplate(file.path);
+
+        let { symbols, margins } = template;
+        Object.keys(symbols).forEach(key => {
+            writeToFile(`${DESTINATION}/${file.name}/${key}.svg`, templateToSvgCode(symbols[key]));
+        });
+    }  
 }
 
-load();
+generate();
